@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriCoach - AI Meal Planner</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥗</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .hidden {
+            display: none;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #4f46e5;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .input-error {
+            border-color: #ef4444;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+        }
+        .hero-section {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        .dashboard-bg {
+            background-color: #f8fafc; /* slate-50 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-800">
+
+    <div id="app" class="mx-auto">
+        <!-- Home Screen -->
+        <div id="homeScreen" class="hidden">
+            <!-- Navbar -->
+            <nav class="bg-white shadow-sm fixed w-full z-10 top-0">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
+                        <div class="flex items-center">
+                            <svg class="w-8 h-8 text-indigo-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.563C9.252 15 9 14.748 9 14.437V9.564Z" />
+                            </svg>
+                            <span class="text-2xl font-bold text-indigo-600">NutriCoach</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button id="homeLoginBtn" class="text-gray-600 hover:text-indigo-600 font-medium">Login</button>
+                            <button id="homeSignupBtn" class="px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">Sign Up</button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Hero Section -->
+            <section class="hero-section pt-32 pb-24 text-center text-white">
+                <div class="max-w-4xl mx-auto px-4">
+                    <h1 class="text-5xl md:text-6xl font-bold mb-4">Your Personal AI Nutrition Coach</h1>
+                    <p class="text-lg md:text-xl text-gray-200 mb-8">Stop guessing. Start planning. NutriCoach uses advanced AI to create personalized meal plans and track your progress, helping you achieve your health goals faster.</p>
+                    <button id="getStartedBtn" class="px-8 py-3 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 text-lg transform hover:scale-105 transition-transform">Get Started for Free</button>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="py-20 bg-slate-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Features Designed For You</h2>
+                        <p class="mt-4 text-lg text-gray-600">Everything you need to take control of your nutrition.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <!-- Feature 1: AI Meal Plans -->
+                        <div class="text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mx-auto mb-4">
+                                <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.82m5.84-2.56a12.022 12.022 0 0 0-5.84-2.56m0 0a12.025 12.025 0 0 0-5.84 2.56m5.84-2.56V4.72a6 6 0 0 1 5.84 7.38m-5.84-7.38a12.024 12.024 0 0 0-5.84 7.38m5.84 2.56a6 6 0 0 1-7.38-5.84m7.38 5.84a12.022 12.022 0 0 0 7.38-5.84m-7.38 5.84-2.56-5.84m0 0a12.023 12.023 0 0 0-2.56 5.84m2.56-5.84a6 6 0 0 0-7.38 5.84m0 0a12.026 12.026 0 0 0-2.56-5.84m2.56 5.84a6 6 0 0 0 5.84 2.56" /></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Personalized Meal Plans</h3>
+                            <p class="text-gray-600">Get 7-day meal plans generated by AI, tailored to your goals, allergies, and preferences.</p>
+                        </div>
+                        <!-- Feature 2: Macro Tracking -->
+                        <div class="text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mx-auto mb-4">
+                               <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Smart Macro Tracking</h3>
+                            <p class="text-gray-600">Log meals effortlessly. Use our AI to estimate macros from a simple description and visualize your intake.</p>
+                        </div>
+                        <!-- Feature 3: Shopping List -->
+                        <div class="text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mx-auto mb-4">
+                                <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c.51 0 .962-.328 1.093-.828l2.857-9.589a.75.75 0 0 0-.713-.928H4.871M6 18.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Automated Shopping Lists</h3>
+                            <p class="text-gray-600">Turn your meal plan into an organized shopping list with one click. Save time at the grocery store.</p>
+                        </div>
+                        <!-- Feature 4: AI Coach -->
+                        <div class="text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mx-auto mb-4">
+                                <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Weekly AI Feedback</h3>
+                            <p class="text-gray-600">Receive motivational feedback and actionable tips from your AI coach based on your weekly progress.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+             <!-- Footer -->
+            <footer class="bg-white py-6">
+                <div class="max-w-7xl mx-auto px-4 text-center text-gray-500">
+                    <p>&copy; 2024 NutriCoach. All rights reserved.</p>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="loader"></div>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="hidden flex items-center justify-center min-h-screen">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-3xl font-bold text-center text-gray-900">Welcome Back!</h2>
+                <div id="loginError" class="hidden p-3 bg-red-100 text-red-700 rounded-md"></div>
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="loginEmail" class="text-sm font-medium text-gray-700">Email</label>
+                        <input id="loginEmail" type="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="text-sm font-medium text-gray-700">Password</label>
+                        <input id="loginPassword" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Login</button>
+                    </div>
+                </form>
+                <p class="text-sm text-center text-gray-600">
+                    Don't have an account? <a href="#" id="showSignup" class="font-medium text-indigo-600 hover:text-indigo-500">Sign up</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Signup Screen -->
+        <div id="signupScreen" class="hidden flex items-center justify-center min-h-screen">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-3xl font-bold text-center text-gray-900">Join NutriCoach</h2>
+                <div id="signupError" class="hidden p-3 bg-red-100 text-red-700 rounded-md"></div>
+                <form id="signupForm" class="space-y-6">
+                    <div>
+                        <label for="signupEmail" class="text-sm font-medium text-gray-700">Email</label>
+                        <input id="signupEmail" type="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="signupPassword" class="text-sm font-medium text-gray-700">Password</label>
+                        <input id="signupPassword" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Create Account</button>
+                    </div>
+                </form>
+                <p class="text-sm text-center text-gray-600">
+                    Already have an account? <a href="#" id="showLogin" class="font-medium text-indigo-600 hover:text-indigo-500">Login</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Onboarding Screen -->
+        <div id="onboardingScreen" class="hidden flex items-center justify-center min-h-screen">
+             <div class="w-full max-w-2xl p-8 space-y-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-3xl font-bold text-center text-gray-900">Tell Us About Yourself</h2>
+                <p class="text-center text-gray-600">This will help us create your personalized plan.</p>
+                <form id="onboardingForm" class="space-y-4 pt-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" id="name" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="age" class="block text-sm font-medium text-gray-700">Age</label>
+                            <input type="number" id="age" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                            <select id="gender" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                         <div>
+                            <label for="height" class="block text-sm font-medium text-gray-700">Height (cm)</label>
+                            <input type="number" id="height" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="weight" class="block text-sm font-medium text-gray-700">Weight (kg)</label>
+                            <input type="number" id="weight" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="activityLevel" class="block text-sm font-medium text-gray-700">Activity Level</label>
+                            <select id="activityLevel" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                                <option value="sedentary">Sedentary (little or no exercise)</option>
+                                <option value="lightly_active">Lightly active (light exercise/sports 1-3 days/week)</option>
+                                <option value="moderately_active">Moderately active (moderate exercise/sports 3-5 days/week)</option>
+                                <option value="very_active">Very active (hard exercise/sports 6-7 days a week)</option>
+                                <option value="extra_active">Extra active (very hard exercise/sports & physical job)</option>
+                            </select>
+                        </div>
+                         <div class="md:col-span-2">
+                            <label for="dietaryGoal" class="block text-sm font-medium text-gray-700">Dietary Goal</label>
+                            <select id="dietaryGoal" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                                <option value="weight_loss">Weight Loss</option>
+                                <option value="muscle_gain">Muscle Gain</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                         <button type="submit" class="w-full px-6 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Save and Continue</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardScreen" class="hidden p-4 dashboard-bg">
+            <nav class="bg-white shadow-sm rounded-lg mb-6">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center text-2xl font-bold text-indigo-600">
+                                NutriCoach
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <button id="profileBtn" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Profile</button>
+                            <button id="adminBtn" class="hidden ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Admin</button>
+                            <button id="logoutBtn" class="ml-4 px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column: AI Meal Plan Generator -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">AI Meal Plan Generator</h3>
+                    <form id="mealPlanForm" class="space-y-4">
+                        <div>
+                            <label for="nutritionGoal" class="block text-sm font-medium text-gray-700">Nutrition Goal</label>
+                            <select id="nutritionGoal" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="weight_loss">🔥 Weight Loss</option>
+                                <option value="muscle_gain">💪 Muscle Gain</option>
+                                <option value="maintenance">🧘‍♀️ Maintenance</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Allergies</label>
+                            <div id="allergies" class="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                                <label class="flex items-center"><input type="checkbox" value="dairy" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Dairy</label>
+                                <label class="flex items-center"><input type="checkbox" value="nuts" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Nuts</label>
+                                <label class="flex items-center"><input type="checkbox" value="gluten" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Gluten</label>
+                                <label class="flex items-center"><input type="checkbox" value="soy" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Soy</label>
+                                <label class="flex items-center"><input type="checkbox" value="shellfish" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Shellfish</label>
+                                <label class="flex items-center"><input type="checkbox" value="fish" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Fish</label>
+                                <label class="flex items-center"><input type="checkbox" value="eggs" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Eggs</label>
+                                <label class="flex items-center"><input type="checkbox" value="sesame" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Sesame</label>
+                                <label class="flex items-center"><input type="checkbox" value="mustard" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Mustard</label>
+                                <label class="flex items-center"><input type="checkbox" value="sulfites" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2">Sulfites</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="dietaryPreference" class="block text-sm font-medium text-gray-700">Dietary Preference</label>
+                            <select id="dietaryPreference" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option>None</option>
+                                <option>Non-Vegetarian</option>
+                                <option>Vegan</option>
+                                <option>Keto</option>
+                                <option>Vegetarian</option>
+                                <option>Paleo</option>
+                                <option>Pescatarian</option>
+                                <option>Mediterranean</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="availableIngredients" class="block text-sm font-medium text-gray-700">Available Ingredients (Required)</label>
+                             <div class="flex items-center space-x-2 mt-1">
+                                <textarea id="availableIngredients" rows="3" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                                <button type="button" id="managePantryBtn" class="px-4 py-2 h-full font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Manage Pantry</button>
+                            </div>
+                            <p id="ingredientsError" class="error-message hidden">Please list at least one ingredient you have available.</p>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-md transition-all duration-300 transform hover:scale-105">Generate Meal Plan</button>
+                        </div>
+                    </form>
+                    <div id="mealPlanResult" class="mt-6">
+                        <!-- Generated meal plan will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Macro Tracker -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">Macro Tracker</h3>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Log a Meal</h4>
+                        <form id="logMealForm" class="space-y-3">
+                            <input id="mealDescription" type="text" placeholder="e.g., 2 scrambled eggs with toast" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <button type="button" id="estimateMacrosBtn" class="w-full px-4 py-2 font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 rounded-md transition-all duration-300 transform hover:scale-105">✨ Estimate Macros</button>
+                            
+                            <div id="macroEstimationResult" class="space-y-2 pt-2 text-sm text-gray-600">
+                                <!-- Detailed macro estimation will appear here -->
+                            </div>
+
+                            <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-md transition-all duration-300 transform hover:scale-105">Log Meal</button>
+                        </form>
+                         <div class="mt-4 text-center">
+                            <button id="getDailyFeedbackBtn" class="w-full px-4 py-2 font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-md transition-all duration-300 transform hover:scale-105">💡 Get Daily Feedback</button>
+                            <div id="dailyFeedbackResult" class="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-md text-sm text-left hidden"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2">Today's Summary</h4>
+                        <div class="relative h-64 w-64 mx-auto"><canvas id="dailyMacroChart"></canvas></div>
+                        <div id="macroAlerts" class="mt-4 text-center"></div>
+                    </div>
+                     <div class="mt-6">
+                        <h4 class="text-lg font-semibold mb-2">This Week's Summary</h4>
+                        <div class="relative h-64 w-64 mx-auto"><canvas id="weeklyMacroChart"></canvas></div>
+                        <div class="mt-4 text-center">
+                            <button id="getWeeklyFeedbackBtn" class="w-full px-4 py-2 font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-md transition-all duration-300 transform hover:scale-105">✨ Get Weekly Feedback</button>
+                            <div id="weeklyFeedbackResult" class="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-md text-sm text-left hidden"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Page -->
+        <div id="profileScreen" class="hidden p-4">
+             <h2 class="text-3xl font-bold mb-6 text-gray-900">User Profile</h2>
+             <div id="profileDetails" class="bg-white p-8 rounded-2xl shadow-lg space-y-4">
+                <!-- Profile details will be dynamically inserted here -->
+             </div>
+             <div class="mt-6 text-center">
+                <button id="backToDash" class="px-6 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Back to Dashboard</button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminScreen" class="hidden bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold mb-6">Admin Dashboard</h2>
+            <!-- Admin content will go here -->
+            <p>Admin controls will appear here soon.</p>
+            <button id="backToDashAdmin" class="mt-6 px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Back to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Pantry / Shopping List Modal -->
+    <div id="pantryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">Manage Your Pantry</h3>
+                <button id="closePantryModal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <div id="pantryContent" class="space-y-4 max-h-96 overflow-y-auto flex-grow">
+                 <!-- Pantry items will be dynamically inserted here -->
+            </div>
+            <div class="mt-6 text-right">
+                <button id="addItemsToPantryBtn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Add Selected to Pantry</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged, 
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            collection,
+            addDoc,
+            query,
+            where,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- App State ---
+        let app, auth, db;
+        let dailyMacroChart, weeklyMacroChart;
+        let currentMealPlan = null;
+        let estimatedMacros = { calories: 0, protein: 0, fats: 0, carbs: 0 };
+
+
+        // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDe2z_zOEa-7YG09vXgyKEqpUGF3_-678U",
+            authDomain: "tracker-8dd00.firebaseapp.com",
+            projectId: "tracker-8dd00",
+            storageBucket: "tracker-8dd00.appspot.com",
+            messagingSenderId: "832527756509",
+            appId: "1:832527756509:web:91c1346b0ea9e212a5ff34",
+            measurementId: "G-M6TJ6N5WLJ"
+        };
+        
+        // --- UI Elements ---
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const homeScreen = document.getElementById('homeScreen');
+        const loginScreen = document.getElementById('loginScreen');
+        const signupScreen = document.getElementById('signupScreen');
+        const onboardingScreen = document.getElementById('onboardingScreen');
+        const dashboardScreen = document.getElementById('dashboardScreen');
+        const profileScreen = document.getElementById('profileScreen');
+        const adminScreen = document.getElementById('adminScreen');
+        
+        const showSignup = document.getElementById('showSignup');
+        const showLogin = document.getElementById('showLogin');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const onboardingForm = document.getElementById('onboardingForm');
+        const mealPlanForm = document.getElementById('mealPlanForm');
+        const logMealForm = document.getElementById('logMealForm');
+        const estimateMacrosBtn = document.getElementById('estimateMacrosBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const profileBtn = document.getElementById('profileBtn');
+        const adminBtn = document.getElementById('adminBtn');
+        const backToDashBtn = document.getElementById('backToDash');
+        const backToDashAdminBtn = document.getElementById('backToDashAdmin');
+        const pantryModal = document.getElementById('pantryModal');
+        const closePantryModal = document.getElementById('closePantryModal');
+        const getWeeklyFeedbackBtn = document.getElementById('getWeeklyFeedbackBtn');
+        const homeLoginBtn = document.getElementById('homeLoginBtn');
+        const homeSignupBtn = document.getElementById('homeSignupBtn');
+        const getStartedBtn = document.getElementById('getStartedBtn');
+        const addItemsToPantryBtn = document.getElementById('addItemsToPantryBtn');
+        const availableIngredientsTextarea = document.getElementById('availableIngredients');
+        const ingredientsError = document.getElementById('ingredientsError');
+        const managePantryBtn = document.getElementById('managePantryBtn');
+        const getDailyFeedbackBtn = document.getElementById('getDailyFeedbackBtn');
+        const profileDetailsDiv = document.getElementById('profileDetails');
+
+
+        // --- Helper Functions ---
+        const showLoading = () => loadingSpinner.classList.remove('hidden');
+        const hideLoading = () => loadingSpinner.classList.add('hidden');
+        const showScreen = (screen) => {
+            [homeScreen, loginScreen, signupScreen, onboardingScreen, dashboardScreen, profileScreen, adminScreen].forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        };
+
+        // --- Event Listeners ---
+        showSignup.addEventListener('click', (e) => { e.preventDefault(); showScreen(signupScreen); });
+        showLogin.addEventListener('click', (e) => { e.preventDefault(); showScreen(loginScreen); });
+        homeLoginBtn.addEventListener('click', () => showScreen(loginScreen));
+        homeSignupBtn.addEventListener('click', () => showScreen(signupScreen));
+        getStartedBtn.addEventListener('click', () => showScreen(signupScreen));
+
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                errorDiv.classList.add('hidden');
+            } catch (error) {
+                console.error("Login Error:", error);
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const errorDiv = document.getElementById('signupError');
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await setDoc(doc(db, "users", user.uid), {
+                    email: user.email,
+                    onboardingComplete: false,
+                    role: 'user',
+                    createdAt: new Date()
+                });
+                errorDiv.classList.add('hidden');
+            } catch (error) {
+                console.error("Signup Error:", error);
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        onboardingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading();
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    const userProfile = {
+                        name: document.getElementById('name').value,
+                        age: document.getElementById('age').value,
+                        gender: document.getElementById('gender').value,
+                        height: document.getElementById('height').value,
+                        weight: document.getElementById('weight').value,
+                        activityLevel: document.getElementById('activityLevel').value,
+                        dietaryGoal: document.getElementById('dietaryGoal').value,
+                        onboardingComplete: true
+                    };
+                    const userDocRef = doc(db, "users", user.uid);
+                    await setDoc(userDocRef, userProfile, { merge: true });
+                    showScreen(dashboardScreen);
+                    initCharts();
+                } catch (error) {
+                    console.error("Error saving onboarding data:", error);
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            showLoading();
+            await signOut(auth);
+            resetAppState();
+            hideLoading();
+        });
+
+        profileBtn.addEventListener('click', async () => {
+            await displayProfileData();
+            showScreen(profileScreen);
+        });
+        adminBtn.addEventListener('click', () => showScreen(adminScreen));
+        backToDashBtn.addEventListener('click', () => showScreen(dashboardScreen));
+        backToDashAdminBtn.addEventListener('click', () => showScreen(dashboardScreen));
+
+        mealPlanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await generateMealPlan();
+        });
+
+        logMealForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await logMeal();
+        });
+
+        estimateMacrosBtn.addEventListener('click', async () => {
+            await estimateMacros();
+        });
+
+        closePantryModal.addEventListener('click', () => {
+            pantryModal.classList.add('hidden');
+        });
+        
+        addItemsToPantryBtn.addEventListener('click', () => {
+            const checkedItems = document.querySelectorAll('#pantryContent input[type="checkbox"]:checked');
+            const itemsToAdd = Array.from(checkedItems).map(item => item.nextElementSibling.textContent);
+            
+            const currentIngredients = availableIngredientsTextarea.value.trim().split(',').map(i => i.trim()).filter(i => i);
+            const newIngredientsSet = new Set([...currentIngredients, ...itemsToAdd]);
+            
+            availableIngredientsTextarea.value = Array.from(newIngredientsSet).join(', ');
+            pantryModal.classList.add('hidden');
+        });
+        
+        managePantryBtn.addEventListener('click', () => {
+            populatePantryModal();
+            pantryModal.classList.remove('hidden');
+        });
+
+        getWeeklyFeedbackBtn.addEventListener('click', async () => {
+            await getWeeklyFeedback();
+        });
+        
+        getDailyFeedbackBtn.addEventListener('click', async () => {
+            await getDailyFeedback();
+        });
+
+        // --- App State Management ---
+        function resetAppState() {
+            currentMealPlan = null;
+            document.getElementById('mealPlanResult').innerHTML = '';
+            logMealForm.reset();
+            document.getElementById('macroEstimationResult').innerHTML = '';
+            estimatedMacros = { calories: 0, protein: 0, fats: 0, carbs: 0 };
+            document.getElementById('dailyFeedbackResult').classList.add('hidden');
+            document.getElementById('dailyFeedbackResult').innerHTML = '';
+            document.getElementById('weeklyFeedbackResult').classList.add('hidden');
+            document.getElementById('weeklyFeedbackResult').innerHTML = '';
+            if (dailyMacroChart) {
+                dailyMacroChart.destroy();
+                dailyMacroChart = null;
+            }
+            if (weeklyMacroChart) {
+                weeklyMacroChart.destroy();
+                weeklyMacroChart = null;
+            }
+        }
+
+        // --- AI Meal Plan Generation ---
+        async function generateMealPlan() {
+            // Validate ingredients input
+            if (availableIngredientsTextarea.value.trim() === '') {
+                availableIngredientsTextarea.classList.add('input-error');
+                ingredientsError.classList.remove('hidden');
+                return;
+            } else {
+                availableIngredientsTextarea.classList.remove('input-error');
+                ingredientsError.classList.add('hidden');
+            }
+
+            showLoading();
+            const mealPlanResult = document.getElementById('mealPlanResult');
+            mealPlanResult.innerHTML = '<p class="text-center">Generating your personalized meal plan...</p>';
+            currentMealPlan = null;
+
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("User not authenticated.");
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (!userDoc.exists()) throw new Error("User profile not found.");
+                const userProfile = userDoc.data();
+
+                const nutritionGoal = document.getElementById('nutritionGoal').value;
+                const allergies = Array.from(document.querySelectorAll('#allergies input:checked')).map(el => el.value);
+                const dietaryPreference = document.getElementById('dietaryPreference').value;
+                const availableIngredients = availableIngredientsTextarea.value;
+
+                const prompt = `
+                    Please generate a 7-day meal plan with 3 meals per day (breakfast, lunch, dinner).
+                    User profile: Age: ${userProfile.age}, Gender: ${userProfile.gender}, Height: ${userProfile.height}cm, Weight: ${userProfile.weight}kg.
+                    Primary Goal: ${nutritionGoal}. Dietary Preference: ${dietaryPreference}. Allergies: ${allergies.join(', ') || 'None'}.
+                    Available Ingredients: ${availableIngredients}.
+                    Response must be a valid JSON object array of 7 day objects, with no text outside the JSON.`;
+
+                const mealSchema = { type: "OBJECT", properties: { name: { type: "STRING" }, calories: { type: "NUMBER" }, protein: { type: "NUMBER" }, fats: { type: "NUMBER" }, carbs: { type: "NUMBER" } }, required: ["name", "calories", "protein", "fats", "carbs"] };
+                const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { day: { type: "STRING" }, breakfast: mealSchema, lunch: mealSchema, dinner: mealSchema }, required: ["day", "breakfast", "lunch", "dinner"] } };
+                const apiUrl = '/api/generate';
+                
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0) {
+                    const mealPlan = JSON.parse(result.candidates[0].content.parts[0].text);
+                    currentMealPlan = mealPlan; 
+                    displayMealPlan(mealPlan);
+                } else {
+                    throw new Error("Failed to generate meal plan. The model returned no candidates.");
+                }
+            } catch (error) {
+                console.error("Error generating meal plan:", error);
+                mealPlanResult.innerHTML = `<p class="text-center text-red-500">Sorry, we couldn't generate a meal plan. Please try again. Error: ${error.message}</p>`;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayMealPlan(plan) {
+            const mealPlanResult = document.getElementById('mealPlanResult');
+            mealPlanResult.innerHTML = ''; 
+
+            plan.forEach(dayPlan => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'mb-4 border border-gray-200 rounded-lg';
+                const dayHeader = document.createElement('button');
+                dayHeader.className = 'w-full text-left p-4 bg-gray-100 hover:bg-gray-200 focus:outline-none flex justify-between items-center';
+                dayHeader.innerHTML = `<span class="font-semibold text-lg">${dayPlan.day}</span><svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+                const dayContent = document.createElement('div');
+                dayContent.className = 'accordion-content p-4';
+                
+                ['breakfast', 'lunch', 'dinner'].forEach(mealType => {
+                    const meal = dayPlan[mealType];
+                    dayContent.innerHTML += `<div class="mb-3 p-3 bg-white rounded-md shadow-sm"><h4 class="font-semibold capitalize">${mealType}: ${meal.name}</h4><p class="text-sm text-gray-600">Calories: ${meal.calories} | Protein: ${meal.protein}g | Fats: ${meal.fats}g | Carbs: ${meal.carbs}g</p></div>`;
+                });
+
+                dayElement.appendChild(dayHeader);
+                dayElement.appendChild(dayContent);
+                mealPlanResult.appendChild(dayElement);
+
+                dayHeader.addEventListener('click', () => {
+                    const icon = dayHeader.querySelector('svg');
+                    const content = dayHeader.nextElementSibling;
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.classList.remove('rotate-180');
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.classList.add('rotate-180');
+                    }
+                });
+            });
+        }
+
+        // --- Pantry Management ---
+        function populatePantryModal() {
+            const pantryContent = document.getElementById('pantryContent');
+            const commonIngredients = {
+                "Fruits": ["Apple", "Banana", "Orange", "Berries", "Grapes", "Pineapple", "Mango", "Peach", "Plum", "Cherries", "Lemon", "Lime"],
+                "Vegetables": ["Spinach", "Kale", "Broccoli", "Carrots", "Onion", "Garlic", "Tomato", "Avocado", "Bell Pepper", "Cucumber", "Mushrooms", "Zucchini", "Eggplant", "Sweet Potato", "Lettuce", "Celery"],
+                "Protein": ["Chicken Breast", "Salmon", "Eggs", "Tofu", "Lentils", "Chickpeas", "Ground Beef", "Steak", "Tuna", "Shrimp", "Turkey"],
+                "Dairy & Alternatives": ["Milk", "Almond Milk", "Soy Milk", "Oat Milk", "Yogurt", "Greek Yogurt", "Cheese", "Cottage Cheese"],
+                "Pantry": ["Rice", "Quinoa", "Oats", "Pasta", "Bread", "Olive Oil", "Coconut Oil", "Canned Tomatoes", "Beans", "Flour", "Sugar"],
+                "Snacks": ["Almonds", "Walnuts", "Popcorn", "Rice cakes", "Protein bar", "Trail mix", "Hummus", "Dried Fruit"],
+                "Desserts": ["Dark Chocolate", "Cocoa Powder", "Dates", "Figs", "Vanilla Extract", "Baking Soda"]
+            };
+
+            let html = '';
+            for (const category in commonIngredients) {
+                html += `<h4 class="font-semibold text-lg text-gray-800 border-b pb-1 mb-2">${category}</h4><div class="grid grid-cols-2 md:grid-cols-3 gap-2">`;
+                commonIngredients[category].forEach(item => {
+                    html += `<label class="flex items-center"><input type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2"><span class="text-gray-700">${item}</span></label>`;
+                });
+                html += `</div>`;
+            }
+            pantryContent.innerHTML = html;
+        }
+
+
+        // --- AI Weekly & Daily Feedback ---
+        async function getWeeklyFeedback() {
+            showLoading();
+            const feedbackResultDiv = document.getElementById('weeklyFeedbackResult');
+            feedbackResultDiv.classList.add('hidden');
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("User not authenticated.");
+
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setHours(0, 0, 0, 0);
+                const day = today.getDay();
+                const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+                startOfWeek.setDate(diff);
+
+                const mealLogsCollection = collection(db, "users", user.uid, "mealLogs");
+                const weeklyQuery = query(mealLogsCollection, where("createdAt", ">=", startOfWeek));
+                const weeklySnapshot = await getDocs(weeklyQuery);
+                
+                if (weeklySnapshot.empty) {
+                    alert("You haven't logged any meals this week. Log some meals to get feedback!");
+                    hideLoading();
+                    return;
+                }
+
+                let loggedMealsSummary = weeklySnapshot.docs.map(doc => doc.data().name).join(', ');
+
+                const prompt = `A user is asking for feedback on their nutrition for the past week. Here is a summary of the meals they logged: "${loggedMealsSummary}". Please provide a brief (2-3 sentences), friendly, and motivational analysis based on their weekly plan. Mention one positive aspect and one simple, actionable tip for improvement. If you see unhealthy items (like 'pizza', 'soda', 'chips', 'fried food'), gently suggest a healthier alternative for next time instead of being critical. Respond as a single block of text.`;
+
+                const apiUrl = '/api/generate';
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0) {
+                    const feedback = result.candidates[0].content.parts[0].text;
+                    feedbackResultDiv.innerHTML = feedback.replace(/\n/g, '<br>');
+                    feedbackResultDiv.classList.remove('hidden');
+                } else {
+                    throw new Error("Failed to get feedback from the model.");
+                }
+
+            } catch (error) {
+                console.error("Error getting weekly feedback:", error);
+                alert("Could not get feedback at this time.");
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function getDailyFeedback() {
+            showLoading();
+            const dailyFeedbackResult = document.getElementById('dailyFeedbackResult');
+            dailyFeedbackResult.classList.add('hidden');
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("User not authenticated.");
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const mealLogsCollection = collection(db, "users", user.uid, "mealLogs");
+                const dailyQuery = query(mealLogsCollection, where("createdAt", ">=", today));
+                const dailySnapshot = await getDocs(dailyQuery);
+
+                if (dailySnapshot.empty) {
+                    alert("You haven't logged any meals today. Log a meal to get feedback!");
+                    hideLoading();
+                    return;
+                }
+
+                let loggedMealsSummary = dailySnapshot.docs.map(doc => doc.data().name).join(', ');
+                const prompt = `Based on the meals logged today (${loggedMealsSummary}), provide a short, positive, and actionable health tip for the user based on their daily plan. If the food is healthy, praise them. If it's unhealthy, gently suggest a healthier choice for their next meal. Keep it to 1-2 sentences.`;
+
+                const apiUrl = '/api/generate';
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0) {
+                    const tip = result.candidates[0].content.parts[0].text;
+                    dailyFeedbackResult.innerHTML = tip;
+                    dailyFeedbackResult.classList.remove('hidden');
+                } else {
+                    throw new Error("Failed to get daily feedback.");
+                }
+            } catch (error) {
+                console.error("Error getting daily feedback:", error);
+                alert("Could not get feedback at this time.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        // --- Meal Logging and Chart Updates ---
+        async function estimateMacros() {
+            const mealDescription = document.getElementById('mealDescription').value;
+            if (!mealDescription) {
+                alert("Please enter a meal description first.");
+                return;
+            }
+            showLoading();
+            const macroResultDiv = document.getElementById('macroEstimationResult');
+            macroResultDiv.innerHTML = '<p>Estimating...</p>';
+            try {
+                const prompt = `Estimate the nutritional information (calories, protein, fats, carbs) for the following meal: "${mealDescription}". Respond with a valid JSON object containing calories, protein, fats, and carbs as numbers. Do not include any text outside the JSON.`;
+                const schema = {
+                    type: "OBJECT",
+                    properties: {
+                        calories: { type: "NUMBER" },
+                        protein: { type: "NUMBER" },
+                        fats: { type: "NUMBER" },
+                        carbs: { type: "NUMBER" }
+                    },
+                    required: ["calories", "protein", "fats", "carbs"]
+                };
+                const apiUrl = '/api/generate';
+                
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0) {
+                    const macros = JSON.parse(result.candidates[0].content.parts[0].text);
+                    estimatedMacros = macros; // Save to state
+                    macroResultDiv.innerHTML = `
+                        <p><strong>Calories:</strong> ${macros.calories}</p>
+                        <p><strong>Protein:</strong> ${macros.protein}g</p>
+                        <p><strong>Fats:</strong> ${macros.fats}g</p>
+                        <p><strong>Carbs:</strong> ${macros.carbs}g</p>
+                    `;
+                } else {
+                     throw new Error("Failed to estimate macros. The model returned no candidates.");
+                }
+            } catch (error) {
+                console.error("Error estimating macros:", error);
+                macroResultDiv.innerHTML = '<p class="text-red-500">Could not estimate. Please log manually.</p>';
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function logMeal() {
+            showLoading();
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("User not authenticated.");
+
+                const meal = {
+                    name: document.getElementById('mealDescription').value,
+                    calories: estimatedMacros.calories,
+                    protein: estimatedMacros.protein,
+                    fats: estimatedMacros.fats,
+                    carbs: estimatedMacros.carbs,
+                    createdAt: new Date()
+                };
+
+                if (!meal.name || !meal.calories || isNaN(meal.calories)) {
+                    alert("Please estimate macros before logging.");
+                    hideLoading();
+                    return;
+                }
+
+                const mealLogsCollection = collection(db, "users", user.uid, "mealLogs");
+                await addDoc(mealLogsCollection, meal);
+                logMealForm.reset();
+                document.getElementById('macroEstimationResult').innerHTML = '';
+                estimatedMacros = { calories: 0, protein: 0, fats: 0, carbs: 0 };
+                await updateMacroCharts();
+                getDailyFeedbackBtn.classList.remove('hidden');
+            } catch (error) {
+                console.error("Error logging meal:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function updateMacroCharts() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const startOfWeek = new Date(today);
+            const day = today.getDay();
+            const diff = today.getDate() - day + (day === 0 ? -6 : 1); 
+            startOfWeek.setDate(diff);
+
+            const mealLogsCollection = collection(db, "users", user.uid, "mealLogs");
+            const weeklyQuery = query(mealLogsCollection, where("createdAt", ">=", startOfWeek));
+            const weeklySnapshot = await getDocs(weeklyQuery);
+
+            let dailyTotals = { protein: 0, fats: 0, carbs: 0 };
+            let weeklyTotals = { protein: 0, fats: 0, carbs: 0 };
+
+            weeklySnapshot.forEach(doc => {
+                const meal = doc.data();
+                const mealDate = meal.createdAt.toDate();
+
+                weeklyTotals.protein += meal.protein;
+                weeklyTotals.fats += meal.fats;
+                weeklyTotals.carbs += meal.carbs;
+
+                if (mealDate >= today) {
+                    dailyTotals.protein += meal.protein;
+                    dailyTotals.fats += meal.fats;
+                    dailyTotals.carbs += meal.carbs;
+                }
+            });
+
+            if (dailyMacroChart) {
+                dailyMacroChart.data.datasets[0].data = [dailyTotals.protein, dailyTotals.fats, dailyTotals.carbs];
+                dailyMacroChart.update();
+            }
+            if (weeklyMacroChart) {
+                weeklyMacroChart.data.datasets[0].data = [weeklyTotals.protein, weeklyTotals.fats, weeklyTotals.carbs];
+                weeklyMacroChart.update();
+            }
+        }
+
+        // --- Profile Page ---
+        function calculateBMI(weight, height) {
+            if (!weight || !height) return "N/A";
+            const heightInMeters = height / 100;
+            const bmi = weight / (heightInMeters * heightInMeters);
+            return bmi.toFixed(1);
+        }
+
+        function getBmiCategory(bmi) {
+            if (bmi < 18.5) return { category: "Underweight", color: "blue" };
+            if (bmi >= 18.5 && bmi < 25) return { category: "Normal weight", color: "green" };
+            if (bmi >= 25 && bmi < 30) return { category: "Overweight", color: "yellow" };
+            if (bmi >= 30) return { category: "Obesity", color: "red" };
+            return { category: "N/A", color: "gray" };
+        }
+
+        async function displayProfileData() {
+            showLoading();
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("User not authenticated.");
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (!userDoc.exists()) throw new Error("User profile not found.");
+                
+                const userData = userDoc.data();
+                const bmi = calculateBMI(userData.weight, userData.height);
+                const bmiCategory = getBmiCategory(bmi);
+                const colorClass = `text-${bmiCategory.color}-600`;
+
+                profileDetailsDiv.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
+                        <div class="p-4 bg-gray-100 rounded-lg"><strong class="font-semibold text-gray-600">Name:</strong> ${userData.name || 'N/A'}</div>
+                        <div class="p-4 bg-gray-100 rounded-lg"><strong class="font-semibold text-gray-600">Email:</strong> ${userData.email || 'N/A'}</div>
+                        <div class="p-4 bg-gray-100 rounded-lg"><strong class="font-semibold text-gray-600">Age:</strong> ${userData.age || 'N/A'}</div>
+                        <div class="p-4 bg-gray-100 rounded-lg"><strong class="font-semibold text-gray-600">Gender:</strong> ${userData.gender || 'N/A'}</div>
+                        <div class="p-4 bg-gray-100 rounded-lg"><strong class="font-semibold text-gray-600">Height:</strong> ${userData.height || 'N/A'} cm</div>
+                        <div class="p-4 bg-gray-100 rounded-lg"><strong class="font-semibold text-gray-600">Weight:</strong> ${userData.weight || 'N/A'} kg</div>
+                    </div>
+                    <div class="mt-6 md:col-span-2 p-4 bg-gray-100 rounded-lg">
+                        <h4 class="font-semibold text-lg mb-2 text-center">Body Mass Index (BMI)</h4>
+                        <div class="flex items-center justify-center space-x-4">
+                            <div class="text-4xl font-bold ${colorClass}">${bmi}</div>
+                            <div class="text-xl font-semibold ${colorClass}">${bmiCategory.category}</div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <p class="font-semibold">BMI Categories:</p>
+                            <ul class="list-disc list-inside">
+                                <li>Below 18.5: Underweight</li>
+                                <li>18.5 – 24.9: Normal weight</li>
+                                <li>25.0 – 29.9: Overweight</li>
+                                <li>30.0 and above: Obesity</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error("Error displaying profile:", error);
+                profileDetailsDiv.innerHTML = `<p class="text-red-500">Could not load profile data.</p>`;
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        // --- Initialization ---
+        function init() {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    showLoading();
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        if(userData.role === 'admin'){ adminBtn.classList.remove('hidden'); } 
+                        else { adminBtn.classList.add('hidden'); }
+
+                        if (userData.onboardingComplete) {
+                            showScreen(dashboardScreen);
+                            document.getElementById('nutritionGoal').value = userData.dietaryGoal || 'weight_loss';
+                            initCharts();
+                            updateMacroCharts(); // Update charts on load
+                        } else {
+                            showScreen(onboardingScreen);
+                        }
+                    } else {
+                        showScreen(onboardingScreen);
+                    }
+                    hideLoading();
+                } else {
+                    showScreen(homeScreen);
+                }
+            });
+        }
+
+        function initCharts() {
+            if (dailyMacroChart || weeklyMacroChart) return;
+            
+            Chart.register(ChartDataLabels);
+
+            const dailyCtx = document.getElementById('dailyMacroChart').getContext('2d');
+            const weeklyCtx = document.getElementById('weeklyMacroChart').getContext('2d');
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                const value = context.parsed;
+                                const sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = sum > 0 ? ((value / sum) * 100).toFixed(1) + '%' : '0%';
+                                label += `${value.toFixed(1)}g (${percentage})`;
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            if (sum === 0) {
+                                return '';
+                            }
+                            let percentage = ((value * 100) / sum).toFixed(1) + '%';
+                            return percentage;
+                        },
+                        color: '#fff',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            };
+
+            dailyMacroChart = new Chart(dailyCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Protein', 'Fats', 'Carbs'],
+                    datasets: [{
+                        label: 'Macros',
+                        data: [0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#ef4444', '#f97316'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            weeklyMacroChart = new Chart(weeklyCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Protein', 'Fats', 'Carbs'],
+                    datasets: [{
+                        label: 'Macros',
+                        data: [0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#ef4444', '#f97316'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+        init();
+    </script>
+</body>
+</html>
